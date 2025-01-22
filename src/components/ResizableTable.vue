@@ -5,7 +5,9 @@ import { createResizableTable } from '@/util/util.table.resize'
 const resizeTable = useTemplateRef('resize-table')
 
 onMounted(() => {
-  createResizableTable(resizeTable.value)
+  if(resizeTable.value) {
+    createResizableTable(resizeTable.value)
+  }
 })
 
 </script>
@@ -100,7 +102,7 @@ onMounted(() => {
 }
 .resizer:hover,
 .resizing {
-  border-right: 2px solid blue;
+  border-right: 2px solid #aaa;
 }
 
 .resizable {
