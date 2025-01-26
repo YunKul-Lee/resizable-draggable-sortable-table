@@ -1,3 +1,6 @@
+/**
+ * 테이블 컬럼 순서 변경
+ */
 function createDraggableTable(table: HTMLElement) {
 
     const headers: NodeListOf<HTMLTableCellElement> = table.querySelectorAll('th')
@@ -5,13 +8,13 @@ function createDraggableTable(table: HTMLElement) {
 
     headers.forEach((header, index) => {
         header.addEventListener('dragstart', (e: DragEvent) => {
-
             draggedColumn = index
             // @ts-ignore
             e.target.classList.add('dragging')
         })
 
         header.addEventListener('dragend', (e: DragEvent) => {
+
             // @ts-ignore
             e.target.classList.remove('dragging')
         })
