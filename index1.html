@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resizable and Reorderable Table</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            position: relative;
+        }
+
+        .resizer {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 5px;
+            height: 100%;
+            cursor: col-resize;
+            background-color: transparent;
+            z-index: 1;
+        }
+
+        .drag-handle {
+            cursor: grab;
+            display: inline-block;
+            margin-left: 5px;
+            user-select: none;
+        }
+
+        .dragging {
+            opacity: 0.5;
+        }
+
+        body.noselect {
+            user-select: none;
+            cursor: col-resize;
+        }
+    </style>
+</head>
+<body>
+<table id="myTable">
+    <thead>
+    <tr>
+        <th draggable="true"><span class="drag-handle">↕</span> Column 1<div class="resizer"></div></th>
+        <th draggable="true"><span class="drag-handle">↕</span> Column 2<div class="resizer"></div></th>
+        <th draggable="true"><span class="drag-handle">↕</span> Column 3<div class="resizer"></div></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>Data 1</td>
+        <td>Data 2</td>
+        <td>Data 3</td>
+    </tr>
+    <tr>
+        <td>Data A</td>
+        <td>Data B</td>
+        <td>Data C</td>
+    </tr>
+    </tbody>
+</table>
+
+<script>
+    // Resizable columns
+    document.querySelectorAll('.resizer').forEach(resizer => {
+        let startX, startWidth, column;
+
+        resizer.addEventListener('mousedown', (e) => {
+            e.preventDefault(); // Prevent default drag behavior
+            column = e.target.parentElement;
+            startX = e.pageX;
+            startWidth = column.offsetWidth;
+
+            document.body.classList.add('noselect'); // Prevent text selection and add resize cursor
+            document.addEventListener('mousemove', resizeColumn);
+            document.addEventListener('mouseup', stopResize);
+            document.addEventListener('selectstart', preventTextSelection); // Prevent text selection
+        });
+
+        function resizeColumn(e) {
+            const newWidth = startWidth + (e.pageX - startX);
+            column.style.width = `${newWidth}px`;
+        }
+
+        function stopResize() {
+            document.body.classList.remove('noselect'); // Revert cursor and selection behavior
+            document.removeEventListener('mousemove', resizeColumn);
+            document.removeEventListener('mouseup', stopResize);
+            document.removeEventListener('selectstart', preventTextSelection); // Restore text selection
+        }
+
+        function preventTextSelection(e) {
+            e.preventDefault();
+        }
+    });
+
+    // Reorder columns
+    const table = document.getElementById('myTable');
+    let draggingElement = null;
+    let draggingIndex = null;
+
+    table.querySelectorAll('th').forEach((th, index) => {
+        th.addEventListener('dragstart', (e) => {
+            draggingElement = th;
+            draggingIndex = index;
+            th.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        });
+
+        th.addEventListener('dragend', () => {
+            draggingElement.classList.remove('dragging');
+            draggingElement = null;
+            draggingIndex = null;
+        });
+
+        th.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            const overElement = e.target.closest('th');
+            if (!overElement || overElement === draggingElement) return;
+
+            const overIndex = Array.from(table.querySelectorAll('th')).indexOf(overElement);
+            const parent = th.parentElement;
+
+            if (draggingIndex < overIndex) {
+                parent.insertBefore(draggingElement, overElement.nextSibling);
+            } else {
+                parent.insertBefore(draggingElement, overElement);
+            }
+
+            // Update rows in the body
+            const bodyRows = table.querySelectorAll('tbody tr');
+            bodyRows.forEach(row => {
+                const cells = Array.from(row.children);
+                const draggingCell = cells[draggingIndex];
+                const overCell = cells[overIndex];
+
+                if (draggingIndex < overIndex) {
+                    row.insertBefore(draggingCell, overCell.nextSibling);
+                } else {
+                    row.insertBefore(draggingCell, overCell);
+                }
+            });
+
+            draggingIndex = overIndex; // Update dragging index
+        });
+    });
+</script>
+</body>
+</html>
