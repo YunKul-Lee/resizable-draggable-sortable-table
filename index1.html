@@ -3,158 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resizable and Reorderable Table</title>
+    <title>Drag and Drop Table Columns</title>
     <style>
         table {
             border-collapse: collapse;
             width: 100%;
         }
-
         th, td {
-            border: 1px solid #ccc;
+            border: 1px solid #ddd;
             padding: 8px;
-            text-align: left;
+            text-align: center;
         }
-
         th {
-            position: relative;
-        }
-
-        .resizer {
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 5px;
-            height: 100%;
-            cursor: col-resize;
-            background-color: transparent;
-            z-index: 1;
-        }
-
-        .drag-handle {
+            background-color: #f4f4f4;
             cursor: grab;
-            display: inline-block;
-            margin-left: 5px;
-            user-select: none;
         }
-
-        .dragging {
+        th.dragging {
             opacity: 0.5;
-        }
-
-        body.noselect {
-            user-select: none;
-            cursor: col-resize;
         }
     </style>
 </head>
 <body>
-<table id="myTable">
+<table id="draggableTable">
     <thead>
     <tr>
-        <th draggable="true"><span class="drag-handle">↕</span> Column 1<div class="resizer"></div></th>
-        <th draggable="true"><span class="drag-handle">↕</span> Column 2<div class="resizer"></div></th>
-        <th draggable="true"><span class="drag-handle">↕</span> Column 3<div class="resizer"></div></th>
+        <th draggable="true">Column 1</th>
+        <th draggable="true">Column 2</th>
+        <th draggable="true">Column 3</th>
+        <th draggable="true">Column 4</th>
     </tr>
     </thead>
     <tbody>
     <tr>
-        <td>Data 1</td>
-        <td>Data 2</td>
-        <td>Data 3</td>
+        <td>Row 1 Col 1</td>
+        <td>Row 1 Col 2</td>
+        <td>Row 1 Col 3</td>
+        <td>Row 1 Col 4</td>
     </tr>
     <tr>
-        <td>Data A</td>
-        <td>Data B</td>
-        <td>Data C</td>
+        <td>Row 2 Col 1</td>
+        <td>Row 2 Col 2</td>
+        <td>Row 2 Col 3</td>
+        <td>Row 2 Col 4</td>
+    </tr>
+    <tr>
+        <td>Row 3 Col 1</td>
+        <td>Row 3 Col 2</td>
+        <td>Row 3 Col 3</td>
+        <td>Row 3 Col 4</td>
     </tr>
     </tbody>
 </table>
 
 <script>
-    // Resizable columns
-    document.querySelectorAll('.resizer').forEach(resizer => {
-        let startX, startWidth, column;
+    const table = document.getElementById('draggableTable');
+    let draggedIndex = null;
 
-        resizer.addEventListener('mousedown', (e) => {
-            e.preventDefault(); // Prevent default drag behavior
-            column = e.target.parentElement;
-            startX = e.pageX;
-            startWidth = column.offsetWidth;
-
-            document.body.classList.add('noselect'); // Prevent text selection and add resize cursor
-            document.addEventListener('mousemove', resizeColumn);
-            document.addEventListener('mouseup', stopResize);
-            document.addEventListener('selectstart', preventTextSelection); // Prevent text selection
+    // Add drag-and-drop event listeners to the headers
+    table.querySelectorAll('th').forEach(header => {
+        header.addEventListener('dragstart', (e) => {
+            const headers = Array.from(header.parentNode.children); // Recalculate current header indices
+            draggedIndex = headers.indexOf(header); // Update draggedIndex based on the latest DOM
+            e.target.classList.add('dragging');
         });
 
-        function resizeColumn(e) {
-            const newWidth = startWidth + (e.pageX - startX);
-            column.style.width = `${newWidth}px`;
-        }
+        header.addEventListener('dragend', (e) => {
+            e.target.classList.remove('dragging');
+        });
 
-        function stopResize() {
-            document.body.classList.remove('noselect'); // Revert cursor and selection behavior
-            document.removeEventListener('mousemove', resizeColumn);
-            document.removeEventListener('mouseup', stopResize);
-            document.removeEventListener('selectstart', preventTextSelection); // Restore text selection
-        }
-
-        function preventTextSelection(e) {
+        header.addEventListener('dragover', (e) => {
             e.preventDefault();
-        }
-    });
-
-    // Reorder columns
-    const table = document.getElementById('myTable');
-    let draggingElement = null;
-    let draggingIndex = null;
-
-    table.querySelectorAll('th').forEach((th, index) => {
-        th.addEventListener('dragstart', (e) => {
-            draggingElement = th;
-            draggingIndex = index;
-            th.classList.add('dragging');
-            e.dataTransfer.effectAllowed = 'move';
         });
 
-        th.addEventListener('dragend', () => {
-            draggingElement.classList.remove('dragging');
-            draggingElement = null;
-            draggingIndex = null;
-        });
-
-        th.addEventListener('dragover', (e) => {
+        header.addEventListener('drop', (e) => {
             e.preventDefault();
-            const overElement = e.target.closest('th');
-            if (!overElement || overElement === draggingElement) return;
 
-            const overIndex = Array.from(table.querySelectorAll('th')).indexOf(overElement);
-            const parent = th.parentElement;
+            // Recalculate the target index based on the latest DOM state
+            const headers = Array.from(header.parentNode.children);
+            const targetIndex = headers.indexOf(header);
 
-            if (draggingIndex < overIndex) {
-                parent.insertBefore(draggingElement, overElement.nextSibling);
-            } else {
-                parent.insertBefore(draggingElement, overElement);
+            // Only proceed if indices are valid and different
+            if (draggedIndex !== null && draggedIndex !== targetIndex) {
+                swapColumns(draggedIndex, targetIndex);
             }
 
-            // Update rows in the body
-            const bodyRows = table.querySelectorAll('tbody tr');
-            bodyRows.forEach(row => {
-                const cells = Array.from(row.children);
-                const draggingCell = cells[draggingIndex];
-                const overCell = cells[overIndex];
-
-                if (draggingIndex < overIndex) {
-                    row.insertBefore(draggingCell, overCell.nextSibling);
-                } else {
-                    row.insertBefore(draggingCell, overCell);
-                }
-            });
-
-            draggingIndex = overIndex; // Update dragging index
+            draggedIndex = null;
         });
     });
+
+    // Function to swap columns
+    function swapColumns(fromIndex, toIndex) {
+        const rows = Array.from(table.rows);
+
+        rows.forEach((row) => {
+            const cells = Array.from(row.children);
+
+            // Move the cell to the new position
+            const movedCell = cells[fromIndex];
+            if (fromIndex < toIndex) {
+                cells[toIndex].after(movedCell);
+            } else {
+                cells[toIndex].before(movedCell);
+            }
+        });
+    }
 </script>
 </body>
 </html>
