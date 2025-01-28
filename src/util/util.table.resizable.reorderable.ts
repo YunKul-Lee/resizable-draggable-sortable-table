@@ -48,12 +48,11 @@ function createReorderableTable(table: HTMLElement) {
             draggingElement = th;
             draggingIndex = index;
             th.classList.add('dragging');
-
             e.dataTransfer!.effectAllowed = 'move'
         });
 
         th.addEventListener('dragend', () => {
-            draggingElement?.classList.remove('dragging');
+            if (draggingElement) draggingElement.classList.remove('dragging');
             draggingElement = null;
             draggingIndex = null;
         });
@@ -67,28 +66,29 @@ function createReorderableTable(table: HTMLElement) {
             const overIndex = Array.from(table.querySelectorAll('th')).indexOf(overElement);
             const parent = th.parentElement;
 
-            // @ts-ignore
-            if (draggingIndex < overIndex) {
-                parent!.insertBefore(draggingElement!, overElement.nextSibling);
-            } else {
-                parent!.insertBefore(draggingElement!, overElement);
+            if(draggingIndex != null) {
+                // @ts-ignore
+                if (draggingIndex < overIndex) {
+                    parent!.insertBefore(draggingElement!, overElement.nextSibling);
+                } else {
+                    parent!.insertBefore(draggingElement!, overElement);
+                }
+
+                // Update rows in the body
+                const bodyRows = table.querySelectorAll('tbody tr');
+                bodyRows.forEach(row => {
+                    const cells = Array.from(row.children);
+                    const reorderedCells = Array.from(parent!.children).map(header => {
+                        return cells[Array.from(parent!.children).indexOf(header)]
+                    })
+
+                    row.innerHTML = '';
+                    reorderedCells.forEach(cell => row.appendChild(cell))
+                });
+
+                draggingIndex = overIndex; // Update dragging index
             }
 
-            // Update rows in the body
-            const bodyRows = table.querySelectorAll('tbody tr');
-            bodyRows.forEach(row => {
-                const cells = Array.from(row.children);
-                const draggingCell = cells[draggingIndex!];
-                const overCell = cells[overIndex];
-
-                if (draggingIndex! < overIndex) {
-                    row.insertBefore(draggingCell, overCell.nextSibling);
-                } else {
-                    row.insertBefore(draggingCell, overCell);
-                }
-            });
-
-            draggingIndex = overIndex; // Update dragging index
         });
     });
 }

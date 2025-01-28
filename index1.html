@@ -19,7 +19,7 @@
             background-color: #f4f4f4;
             cursor: grab;
             position: relative;
-            overflow: visible; /* Ensure the resize handle is visible even if it overlaps */
+            overflow: visible;
         }
         th.dragging {
             opacity: 0.5;
@@ -29,8 +29,8 @@
             cursor: ew-resize;
             position: absolute;
             top: 0;
-            right: -5px; /* Offset 5px into the adjacent column */
-            width: 10px; /* Make the handle 10px wide */
+            right: -5px;
+            width: 10px;
             height: 100%;
             background-color: #888;
             z-index: 1; /* Make sure the handle is on top */
@@ -55,7 +55,8 @@
         </th>
         <th draggable="true">
             Column 4
-        </th> <!-- Last column does not have a resize handle -->
+            <div class="resize-handle"></div> <!-- Added resize handle to the last column -->
+        </th>
     </tr>
     </thead>
     <tbody>
@@ -86,9 +87,6 @@
 
     // Add drag-and-drop event listeners to the headers
     table.querySelectorAll('th').forEach((header, index) => {
-        // Skip the last column (no resize handle)
-        if (index === table.rows[0].cells.length - 1) return;
-
         const resizeHandle = header.querySelector('.resize-handle');
 
         header.addEventListener('dragstart', (e) => {

@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import DraggableColumnTable from "@/components/DraggableColumnTable.vue";
+import ResizableDraggableTable from "@/components/ResizableDraggableTable.vue";
 </script>
 
 <template>
-  <draggable-column-table></draggable-column-table>
+  <resizable-draggable-table></resizable-draggable-table>
 </template>
 
