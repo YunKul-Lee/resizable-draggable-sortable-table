@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Drag and Drop Table Columns</title>
+    <title>Drag and Drop Table Columns with Resize</title>
     <style>
         table {
             border-collapse: collapse;
@@ -13,13 +13,27 @@
             border: 1px solid #ddd;
             padding: 8px;
             text-align: center;
+            position: relative;
         }
         th {
             background-color: #f4f4f4;
             cursor: grab;
+            position: relative;
+            overflow: visible; /* Ensure the resize handle is visible even if it overlaps */
         }
         th.dragging {
             opacity: 0.5;
+        }
+        /* Resize handle styling */
+        .resize-handle {
+            cursor: ew-resize;
+            position: absolute;
+            top: 0;
+            right: -5px; /* Offset 5px into the adjacent column */
+            width: 10px; /* Make the handle 10px wide */
+            height: 100%;
+            background-color: #888;
+            z-index: 1; /* Make sure the handle is on top */
         }
     </style>
 </head>
@@ -27,10 +41,21 @@
 <table id="draggableTable">
     <thead>
     <tr>
-        <th draggable="true">Column 1</th>
-        <th draggable="true">Column 2</th>
-        <th draggable="true">Column 3</th>
-        <th draggable="true">Column 4</th>
+        <th draggable="true">
+            Column 1
+            <div class="resize-handle"></div>
+        </th>
+        <th draggable="true">
+            Column 2
+            <div class="resize-handle"></div>
+        </th>
+        <th draggable="true">
+            Column 3
+            <div class="resize-handle"></div>
+        </th>
+        <th draggable="true">
+            Column 4
+        </th> <!-- Last column does not have a resize handle -->
     </tr>
     </thead>
     <tbody>
@@ -60,7 +85,12 @@
     let draggedIndex = null;
 
     // Add drag-and-drop event listeners to the headers
-    table.querySelectorAll('th').forEach(header => {
+    table.querySelectorAll('th').forEach((header, index) => {
+        // Skip the last column (no resize handle)
+        if (index === table.rows[0].cells.length - 1) return;
+
+        const resizeHandle = header.querySelector('.resize-handle');
+
         header.addEventListener('dragstart', (e) => {
             const headers = Array.from(header.parentNode.children); // Recalculate current header indices
             draggedIndex = headers.indexOf(header); // Update draggedIndex based on the latest DOM
@@ -88,6 +118,32 @@
             }
 
             draggedIndex = null;
+        });
+
+        // Resizing logic
+        resizeHandle.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            const startX = e.clientX;
+            const startWidth = header.offsetWidth;
+
+            const mouseMoveHandler = (moveEvent) => {
+                const diff = moveEvent.clientX - startX;
+                header.style.width = `${startWidth + diff}px`;
+
+                // Resize only the cells in the current column
+                const rows = table.rows;
+                Array.from(rows).forEach((row) => {
+                    row.cells[index].style.width = `${startWidth + diff}px`;
+                });
+            };
+
+            const mouseUpHandler = () => {
+                document.removeEventListener('mousemove', mouseMoveHandler);
+                document.removeEventListener('mouseup', mouseUpHandler);
+            };
+
+            document.addEventListener('mousemove', mouseMoveHandler);
+            document.addEventListener('mouseup', mouseUpHandler);
         });
     });
 
