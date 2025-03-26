@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drag & Drop</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+        }
+        .draggable {
+            width: 100px;
+            height: 100px;
+            background-color: #3498db;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            cursor: grab;
+            user-select: none;
+            border-radius: 10px;
+            transform: translate(0px, 0px);
+        }
+    </style>
+</head>
+<body>
+<div class="draggable" id="dragElement">Drag Me</div>
+
+<script>
+    const dragElement = document.getElementById("dragElement");
+    let offsetX = 0, offsetY = 0, isDragging = false;
+    let initialX = 0, initialY = 0;
+
+    dragElement.addEventListener("mousedown", (e) => {
+        isDragging = true;
+        initialX = e.clientX - offsetX;
+        initialY = e.clientY - offsetY;
+        dragElement.style.cursor = "grabbing";
+    });
+
+    document.addEventListener("mousemove", (e) => {
+        if (isDragging) {
+            offsetX = e.clientX - initialX;
+            offsetY = e.clientY - initialY;
+            dragElement.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+        }
+    });
+
+    document.addEventListener("mouseup", () => {
+        isDragging = false;
+        dragElement.style.cursor = "grab";
+    });
+</script>
+</body>
+</html>
